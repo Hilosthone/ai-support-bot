@@ -35,7 +35,7 @@ An AI-powered customer support bot that reads your company documents and answers
 | Vector Search | FAISS |
 | Memory | SQLite |
 | Frontend | Next.js, Tailwind CSS |
-| Hosting | Render (backend), Vercel (frontend) |
+| Hosting | Render |
 
 ---
 
