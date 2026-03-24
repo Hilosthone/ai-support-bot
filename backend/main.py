@@ -50,3 +50,16 @@ async def chat(req: ChatRequest):
 async def end_session(session_id: str):
     clear_session(session_id)
     return {"message": "Session cleared"}
+
+import os
+from config import VECTOR_STORE_DIR, BASE_DIR
+
+@app.get("/admin/debug")
+async def debug():
+    files = os.listdir(VECTOR_STORE_DIR) if os.path.exists(VECTOR_STORE_DIR) else []
+    return {
+        "base_dir": BASE_DIR,
+        "vector_store_dir": VECTOR_STORE_DIR,
+        "files_on_disk": files,
+        "doc_ids_in_db": get_all_doc_ids()
+    }
