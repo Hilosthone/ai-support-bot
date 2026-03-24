@@ -4,13 +4,30 @@ import faiss
 import numpy as np
 import pandas as pd
 import pickle
+import sqlite3
 from io import BytesIO
 from docx import Document
 from PyPDF2 import PdfReader
 from openai import OpenAI
-from config import OPENAI_API_KEY, EMBEDDING_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR, CHUNK_SIZE, CHUNK_OVERLAP
+from config import OPENAI_API_KEY, EMBEDDING_MODEL, VECTOR_STORE_DIR, CHUNK_SIZE, CHUNK_OVERLAP, BASE_DIR
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+DB_PATH = f"{BASE_DIR}/memory.db"
+
+
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            doc_id TEXT,
+            filename TEXT,
+            uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    return conn
 
 
 def extract_text(filename: str, content: bytes) -> str:
@@ -64,19 +81,48 @@ def index_document(filename: str, content: bytes) -> dict:
     with open(f"{VECTOR_STORE_DIR}/{doc_id}.chunks", "wb") as f:
         pickle.dump(chunks, f)
 
-    # Save as the active doc the bot will always reference
-    from config import ACTIVE_DOC_FILE
-    with open(ACTIVE_DOC_FILE, "w") as f:
-        f.write(doc_id)
+    conn = get_conn()
+    conn.execute(
+        "INSERT INTO documents (doc_id, filename) VALUES (?, ?)",
+        (doc_id, filename)
+    )
+    conn.commit()
+    conn.close()
 
-    return {"doc_id": doc_id, "chunks_indexed": len(chunks)}
+    return {"doc_id": doc_id, "filename": filename, "chunks_indexed": len(chunks)}
 
 
-def retrieve(query: str, doc_id: str, top_k: int = 5) -> list[str]:
-    index = faiss.read_index(f"{VECTOR_STORE_DIR}/{doc_id}.index")
-    with open(f"{VECTOR_STORE_DIR}/{doc_id}.chunks", "rb") as f:
-        chunks = pickle.load(f)
+def get_all_doc_ids() -> list[str]:
+    conn = get_conn()
+    rows = conn.execute("SELECT doc_id FROM documents").fetchall()
+    conn.close()
+    return [r[0] for r in rows]
+
+
+def retrieve(query: str, top_k: int = 5) -> list[str]:
+    doc_ids = get_all_doc_ids()
+    if not doc_ids:
+        raise RuntimeError("No company docs uploaded yet. Please contact the admin.")
 
     query_vector = embed([query])
-    _, indices = index.search(query_vector, top_k)
-    return [chunks[i] for i in indices[0] if i < len(chunks)]
+    all_results = []
+
+    for doc_id in doc_ids:
+        index_path = f"{VECTOR_STORE_DIR}/{doc_id}.index"
+        chunks_path = f"{VECTOR_STORE_DIR}/{doc_id}.chunks"
+
+        if not os.path.exists(index_path):
+            continue
+
+        index = faiss.read_index(index_path)
+        with open(chunks_path, "rb") as f:
+            chunks = pickle.load(f)
+
+        distances, indices = index.search(query_vector, top_k)
+        for dist, idx in zip(distances[0], indices[0]):
+            if idx < len(chunks):
+                all_results.append((dist, chunks[idx]))
+
+    # Sort by distance, return top_k best across all docs
+    all_results.sort(key=lambda x: x[0])
+    return [chunk for _, chunk in all_results[:top_k]]
