@@ -1,69 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  /* Sentinel Dark Theme Palette */
-  --background: #020617; /* Slate 950 */
-  --foreground: #f8fafc; /* Slate 50 */
-  --accent: #ff4f00;     /* Your Signature Orange */
-  --border: #1e293b;     /* Slate 800 */
+  --foreground-rgb: 17, 17, 17;
+  --background-start-rgb: 252, 253, 255;
+  --background-end-rgb: 255, 255, 255;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
-  --color-border: var(--border);
-  
-  /* Adding the custom Geist fonts from your Next.js setup */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  scroll-behavior: smooth;
 }
 
-/* Global Reset & Base Styles */
-@layer base {
-  * {
-    @apply border-border;
-  }
-  
-  body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans);
-    overflow-x: hidden;
-  }
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(var(--background-end-rgb))
+  )
+  rgb(var(--background-start-rgb));
 }
 
-/* Custom Scrollbar for that "Full-Stack" Polish */
-@layer utilities {
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--accent);
-  }
-
-  /* Typography for Markdown (Requires @tailwindcss/typography) */
-  .prose pre {
-    @apply bg-slate-950 border border-slate-800 p-4 rounded-lg my-4;
-  }
-  
-  .prose code {
-    @apply text-accent font-mono bg-slate-800/50 px-1 rounded;
-  }
+/* Custom scrollbar for that premium feel */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Cyber Background Glow Effect */
-.bg-grid-pattern {
-  background-image: radial-gradient(circle at 2px 2px, rgba(255, 79, 0, 0.05) 1px, transparent 0);
-  background-size: 40px 40px;
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

@@ -1,34 +1,28 @@
 import type { Metadata } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import Navbar from '@/app/components/layout/Navbar'
+import Footer from '@/app/components/layout/Footer'
 
-// Wrap 'latin' in brackets to make it an array
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space',
-})
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SupportBot Alpha | AI Intelligence Hub',
-  description: 'Enterprise-grade AI customer support with RAG memory.',
+  title: 'SupportAI | Smarter Customer Support Powered By AI',
+  description:
+    'Train a chatbot on your business data and deliver instant, accurate responses 24/7.',
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang='en' className='dark'>
-      <body
-        className={`${inter.variable} ${spaceGrotesk.variable} antialiased bg-[#020617] text-slate-200`}
-      >
+    <html lang='en' className='scroll-smooth'>
+      <body className={`${inter.className} antialiased text-slate-900`}>
+        <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   )
